@@ -1,85 +1,103 @@
-# Deploying Infrastructure Spares to an Internal Linux Server
+# Deploying Infrastructure Spares via GitHub to an Internal Linux Server
 
-This guide explains how to deploy this project on your internal Linux server (Ubuntu, Debian, RHEL, Rocky Linux, CentOS, etc.).
-
----
-
-## Method 1: Docker & Docker Compose (Recommended)
-
-This is the easiest and most isolated method. It automatically manages dependencies, builds the production app, and keeps your component inventory in a persistent volume.
-
-### Prerequisites
-- Docker and Docker Compose installed:
-  ```bash
-  sudo apt update && sudo apt install -y docker.io docker-compose-v2
-  ```
-
-### Steps
-
-1. **Copy the project to your server**:
-   ```bash
-   scp -r ./infrastructure-spares user@your-server-ip:/opt/infrastructure-spares
-   ```
-
-2. **Navigate to the directory**:
-   ```bash
-   cd /opt/infrastructure-spares
-   ```
-
-3. **Start the container in detached mode**:
-   ```bash
-   docker compose up -d --build
-   ```
-
-4. **Verify it is running**:
-   ```bash
-   docker compose ps
-   docker compose logs -f
-   ```
-
-Your server is now live at `http://<your-server-ip>:3000`!
-All inventory data is stored in `./data/inventory.json` on the host, so data persists across container updates.
+This guide explains how to push this project to GitHub and deploy it directly on your internal Linux server.
 
 ---
 
-## Method 2: Native Linux Service via Systemd
+## Step 1: Push Project to Your GitHub Repository
 
-If you prefer running directly on the host using Node.js:
+Initialize Git and push your code to `byronlange1989-max/Infrastructure-Spares`:
+```bash
+git init
+git add .
+git commit -m "Initial commit: Infrastructure Spares"
+git branch -M main
+git remote add origin https://github.com/byronlange1989-max/Infrastructure-Spares.git
+git push -u origin main
+```
 
-### Prerequisites
-- Node.js (v18 or v20 LTS) and npm installed:
-  ```bash
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-  sudo apt install -y nodejs
-  ```
+---
 
-### Steps
+## Step 2: Deploy on Your Linux Server (via GitHub)
 
-1. **Copy the code to `/opt/infrastructure-spares`**:
+SSH into your internal Linux server:
+
+```bash
+ssh user@<your-server-ip>
+```
+
+### Option A: Using Docker & Docker Compose (Recommended)
+
+1. **Clone the repository**:
    ```bash
-   sudo mkdir -p /opt/infrastructure-spares
-   sudo cp -r ./* /opt/infrastructure-spares/
-   cd /opt/infrastructure-spares
+   sudo mkdir -p /opt
+   cd /opt
+   sudo git clone https://github.com/byronlange1989-max/Infrastructure-Spares.git
+   cd Infrastructure-Spares
    ```
 
-2. **Install dependencies and build**:
+2. **Build and launch the container**:
    ```bash
-   npm install
-   npm run build
+   sudo docker compose up -d --build
    ```
 
-3. **Install the systemd service**:
+3. **Check status**:
+   ```bash
+   sudo docker compose ps
+   sudo docker compose logs -f
+   ```
+
+Your app is live on `http://<your-server-ip>:3000`! All inventory data is preserved in `/opt/Infrastructure-Spares/data/`.
+
+---
+
+### Option B: Using Native Node.js & Systemd
+
+1. **Install Node.js 20 LTS on your server**:
+   ```bash
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   sudo apt install -y nodejs git
+   ```
+
+2. **Clone the repository**:
+   ```bash
+   sudo git clone https://github.com/byronlange1989-max/Infrastructure-Spares.git /opt/Infrastructure-Spares
+   cd /opt/Infrastructure-Spares
+   ```
+
+3. **Install dependencies and build**:
+   ```bash
+   sudo npm install
+   sudo npm run build
+   ```
+
+4. **Install and start the systemd service**:
    ```bash
    sudo cp infrastructure-spares.service /etc/systemd/system/
    sudo systemctl daemon-reload
    sudo systemctl enable infrastructure-spares
    sudo systemctl start infrastructure-spares
-   ```
-
-4. **Check status**:
-   ```bash
    sudo systemctl status infrastructure-spares
    ```
+
+---
+
+## Step 3: Updating Later from GitHub
+
+Whenever you push new changes to GitHub, you can update your Linux server with a single command:
+
+```bash
+cd /opt/Infrastructure-Spares
+sudo ./update.sh
+```
+
+Or manually:
+```bash
+git pull origin main
+sudo docker compose up -d --build   # (if using Docker)
+# OR
+npm install && npm run build && sudo systemctl restart infrastructure-spares  # (if using Systemd)
+```
 
 ---
 
