@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  infrastructure-spares:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: infrastructure-spares
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      # Mounts local data folder to container for permanent inventory persistence
+      - ./data:/app/data

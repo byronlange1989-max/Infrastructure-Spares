@@ -1,0 +1,19 @@
+[Unit]
+Description=Infrastructure Spares Inventory Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/infrastructure-spares
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=infrastructure-spares
+
+[Install]
+WantedBy=multi-user.target
