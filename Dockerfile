@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json tsconfig*.json vite.config.ts ./
 
-# Install all dependencies including devDependencies for build
-RUN npm ci
+# Install dependencies for building frontend
+RUN npm install
 
 # Copy source code and files
 COPY . .
@@ -24,7 +24,7 @@ ENV PORT=3000
 
 # Install production dependencies
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copy built frontend assets from builder
 COPY --from=builder /app/dist ./dist
